@@ -17,21 +17,19 @@ public static class LegacyFlowFieldGrid {
                     List<Vector2Int> neighbours = allNeighboursOf(pos, gridSize, grid);
 
                     //Go through all neighbours and find the one with the lowest distance
-                    Vector2Int min = Vector2Int.zero;//this may be incorrect
-                    bool minNotNull = false;
-                    int minDist = 0;
+                    Vector2Int min = pos;
+                    int minDist = int.MaxValue;
                     for (int i = 0; i < neighbours.Count; i++) {
                         Vector2Int n = neighbours[i];
-                        int dist = grid[n.x, n.y].getWeight() - grid[pos.x, pos.y].getWeight();
-                        if (dist < minDist) {
+                        int dist = grid[n.x, n.y].getWeight(); // Compare the absolute tile weight, not the relative difference
+                        if (dist != -1 && dist < minDist) {
                             min = n;
-                            minNotNull = true;
                             minDist = dist;
                         }
                     }
 
-                    //If we found a valid neighbour, point in its direction
-                    if (minNotNull) {//potential problem
+                    //If we found a valid neighbour with a lower weight, point to it
+                    if (minDist < grid[pos.x, pos.y].getWeight()) {
                         grid[x, y].setFlowFieldVector(min - pos);
                     }
                 }

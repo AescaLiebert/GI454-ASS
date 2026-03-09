@@ -19,7 +19,7 @@ public static class DijkstraGrid {
         //for each node we need to visit, starting with the pathEnd
         for (int i = 0; i < toVisit.Count; i++) {
 
-            List<DijkstraTile> neighbours = straightNeighboursOf(toVisit[i], gridSize);
+            List<DijkstraTile> neighbours = straightNeighboursOf(toVisit[i], gridSize, grid);
 
             //for each neighbour of this node (only straight line neighbours, not diagonals)
             foreach (DijkstraTile neighbour in neighbours) {
@@ -35,19 +35,19 @@ public static class DijkstraGrid {
         return grid;
     }
 
-    private static List<DijkstraTile> straightNeighboursOf(DijkstraTile tile, Vector2Int gridSize) {
+    private static List<DijkstraTile> straightNeighboursOf(DijkstraTile tile, Vector2Int gridSize, DijkstraTile[,] grid) {
         List<DijkstraTile> neighbours = new List<DijkstraTile>();
         if (tile.getVector2d().x > 0) {
-            neighbours.Add(new DijkstraTile(new Vector2Int (tile.getVector2d().x - 1, tile.getVector2d().y), Vector3.zero));
+            neighbours.Add(grid[tile.getVector2d().x - 1, tile.getVector2d().y]);
         }
         if (tile.getVector2d().y > 0) {
-            neighbours.Add(new DijkstraTile(new Vector2Int (tile.getVector2d().x, tile.getVector2d().y - 1), Vector3.zero));
+            neighbours.Add(grid[tile.getVector2d().x, tile.getVector2d().y - 1]);
         }
         if (tile.getVector2d().x < gridSize.x - 1) {
-            neighbours.Add(new DijkstraTile(new Vector2Int (tile.getVector2d().x + 1, tile.getVector2d().y), Vector3.zero));
+            neighbours.Add(grid[tile.getVector2d().x + 1, tile.getVector2d().y]);
         }
         if (tile.getVector2d().y < gridSize.y - 1) {
-            neighbours.Add(new DijkstraTile(new Vector2Int (tile.getVector2d().x, tile.getVector2d().y + 1), Vector3.zero));
+            neighbours.Add(grid[tile.getVector2d().x, tile.getVector2d().y + 1]);
         }
         return neighbours;
     }

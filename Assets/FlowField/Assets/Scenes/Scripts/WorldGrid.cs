@@ -50,8 +50,19 @@ public class WorldGrid : MonoBehaviour {
                 Vector3 worldPoint = bottomLeft + Vector3.right * (x * fNodeDiameter + fNodeRadius) + Vector3.forward * (y * fNodeDiameter + fNodeRadius);//Get the world co ordinates of the bottom left of the graph
                 DijkstraTile tile = new DijkstraTile(new Vector2Int(x, y), worldPoint);
 
-                if (Physics.CheckSphere(worldPoint, fNodeRadius, WallMask)) {
+                if (Physics.CheckBox(worldPoint, new Vector3(fNodeRadius, fNodeRadius, fNodeRadius), Quaternion.identity, WallMask)) {
                     tile.setWeight(int.MaxValue);
+                }
+                else {
+                    // Fallback to detect Default layer walls the user placed
+                    Vector3 checkPoint = new Vector3(worldPoint.x, 0.5f, worldPoint.z);
+                    Collider[] hits = Physics.OverlapBox(checkPoint, new Vector3(fNodeRadius, 0.25f, fNodeRadius), Quaternion.identity);
+                    foreach (Collider hit in hits) {
+                        if (hit.gameObject.name != "Plane" && !hit.gameObject.name.Contains("Agent") && hit.gameObject.name != "target") {
+                            tile.setWeight(int.MaxValue);
+                            break;
+                        }
+                    }
                 }
                 NodeArray[x, y] = tile;//Create a new node in the array.
             }
@@ -60,15 +71,38 @@ public class WorldGrid : MonoBehaviour {
 
     //Gets the closest node to the given world position.
     public DijkstraTile NodeFromWorldPoint(Vector3 a_vWorldPos) {
-        float ixPos = ((a_vWorldPos.x + vGridWorldSize.x / 2) / vGridWorldSize.x);
-        float iyPos = ((a_vWorldPos.z + vGridWorldSize.y / 2) / vGridWorldSize.y);
+        float fRelX = a_vWorldPos.x - (transform.position.x - vGridWorldSize.x / 2);
+        float fRelY = a_vWorldPos.z - (transform.position.z - vGridWorldSize.y / 2);
 
-        ixPos = Mathf.Clamp01(ixPos);
-        iyPos = Mathf.Clamp01(iyPos);
+        int ix = Mathf.FloorToInt(fRelX / fNodeDiameter);
+        int iy = Mathf.FloorToInt(fRelY / fNodeDiameter);
 
-        int ix = Mathf.RoundToInt((iGridSizeX - 1) * ixPos);
-        int iy = Mathf.RoundToInt((iGridSizeY - 1) * iyPos);
+        ix = Mathf.Clamp(ix, 0, iGridSizeX - 1);
+        iy = Mathf.Clamp(iy, 0, iGridSizeY - 1);
 
         return NodeArray[ix, iy];
+    }
+
+    private void OnDrawGizmos() {
+ 
+        Gizmos.color = Color.yellow;//Set the color of the wireframe
+        Gizmos.DrawWireCube(transform.position, new Vector3(vGridWorldSize.x, 1, vGridWorldSize.y));//Draw a wire cube with the given dimensions from the Unity inspector
+       
+        if (NodeArray != null)//If the grid is not empty
+        {
+            foreach (DijkstraTile n in NodeArray)//Loop through every node in the grid
+            {
+                if (n.getWeight() == int.MaxValue)//If the current node is a wall node
+                {
+                    Gizmos.color = Color.magenta;//Set the color of the node
+                }
+                else {
+                    Gizmos.color = Color.blue;//Set the color of the node
+                }
+                Gizmos.DrawWireSphere(n.getWorldPosition(), (fNodeRadius - fDistanceBetweenNodes) * 0.1f);
+                Gizmos.DrawLine(n.getWorldPosition(), n.getWorldPosition() + new Vector3(n.getFlowFieldVector().x, 0, n.getFlowFieldVector().y).normalized * fNodeRadius);
+                //Gizmos.DrawCube(n.getWorldPosition(), new Vector3(1,0,1) * (fNodeDiameter - fDistanceBetweenNodes));//Draw the node at the position of the node.
+            }
+        }
     }
 }

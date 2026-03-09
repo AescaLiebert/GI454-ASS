@@ -3,8 +3,16 @@ using UnityEngine;
 public class FlockManager : MonoBehaviour
 {
     public GameObject boidPrefab;
-    public int boidCount = 20;
+    public GameObject sharkPrefab;
+    public int boidCount;
     public Vector3 boundaryArea = new Vector3(10, 10, 10);
+
+    public static FlockManager instance;
+
+    void Awake()
+    {
+        if (instance == null) instance = this;
+    }
 
     void Start()
     {
@@ -18,35 +26,25 @@ public class FlockManager : MonoBehaviour
 
             Instantiate(boidPrefab, position, Quaternion.identity);
         }
+
+        Vector3 sharkPosition = transform.position + new Vector3(
+            Random.Range(-boundaryArea.x, boundaryArea.x),
+            Random.Range(-boundaryArea.y, boundaryArea.y),
+            Random.Range(-boundaryArea.z, boundaryArea.z)
+        );
+
+        Instantiate(sharkPrefab, sharkPosition, Quaternion.identity);
     }
 
     void Update()
     {
-        foreach (Boid boid in FindObjectsByType<Boid>(FindObjectsSortMode.None)) // Loop through all boids
-        {
-            WrapPosition(boid.transform);
-        }
+        // Boids handle their own boundary turning in Boid.cs
     }
 
-    void WrapPosition(Transform obj)
+    // Draw the boundary box in Scene View
+    void OnDrawGizmos()
     {
-        Vector3 pos = obj.position;
-
-        // Check each axis and wrap the position
-        if (pos.x > boundaryArea.x) pos.x = -boundaryArea.x;
-        else if (pos.x < -boundaryArea.x) pos.x = boundaryArea.x;
-
-        if (pos.y > boundaryArea.y) pos.y = -boundaryArea.y;
-        else if (pos.y < -boundaryArea.y) pos.y = boundaryArea.y;
-
-        if (pos.z > boundaryArea.z) pos.z = -boundaryArea.z;
-        else if (pos.z < -boundaryArea.z) pos.z = boundaryArea.z;
-
-        obj.position = pos; // Apply the wrapped position
-    }
-
-    private void OnDrawGizmos() {
-        Gizmos.color = Color.yellow;//Set the color of the wireframe
-        Gizmos.DrawWireCube(transform.position, boundaryArea * 2); //Draw a wire cube for the boid bounding area
+        Gizmos.color = Color.green; // Set Gizmo color
+        Gizmos.DrawWireCube(transform.position, boundaryArea * 2); // Draw boundary box
     }
 }
